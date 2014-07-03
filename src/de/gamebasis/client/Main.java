@@ -137,11 +137,17 @@ public class Main extends SimpleApplication implements ScreenController {
     @Override
     public void simpleUpdate(float tpf) {
         //TODO: add update code
+        if (GameState.isConnected && GameState.isLoaded) {
+            //
+        }
     }
 
     @Override
     public void simpleRender(RenderManager rm) {
         //TODO: add render code
+        if (GameState.isConnected && GameState.isLoaded) {
+            //
+        }
     }
     
     public Client getClient () {

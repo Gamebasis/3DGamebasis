@@ -45,7 +45,7 @@ public class NetworkConnector {
         NetworkConnector.setInstance(this);
     }
     
-    public void setUpNetwork (String server, int port, String username, String password) {
+    public boolean setUpNetwork (String server, int port, String username, String password) {
         try {
             this.server = server;
             this.port = port;
@@ -75,9 +75,13 @@ public class NetworkConnector {
             GameEventManager.raiseEvent(gamestartevent);
             
             GameState.isConnected = true;
+            
+            return true;
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
+        return false;
     }
     
     public String getServer () {
@@ -90,6 +94,14 @@ public class NetworkConnector {
     
     public int getClientID () {
         return this.clientID;
+    }
+    
+    public Client getClient () {
+        return this.client;
+    }
+    
+    public GameClientStateListener getGameClientStateListener () {
+        return this.gameclientstatelistener;
     }
     
     public ClientListener getClientListener () {

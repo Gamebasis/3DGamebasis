@@ -8,6 +8,8 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.input.event.MouseButtonEvent;
 import com.jme3.input.event.MouseMotionEvent;
 import com.jme3.math.Vector2f;
+import de.gamebasis.gameloader.GameLoader;
+import de.gamebasis.networkconnector.NetworkConnector;
 import de.gamebasislib.ui.UIWindowManager;
 import tonegod.gui.controls.buttons.Button;
 import tonegod.gui.controls.text.Label;
@@ -66,15 +68,15 @@ public class LoginWindow {
         label.setPosition(100, 100);
         window.addChild(label);
         
-        TextField textfield = new TextField(this.uiwindowmanager.getScreen(), "TextField", new Vector2f(200, 140));
-        window.addChild(textfield);
+        final TextField usernametextfield = new TextField(this.uiwindowmanager.getScreen(), "TextField", new Vector2f(200, 140));
+        window.addChild(usernametextfield);
         
         label = new Label(this.uiwindowmanager.getScreen(), new Vector2f(400, 100));
         label.setText("Password (optional): ");
         label.setPosition(340, 100);
         window.addChild(label);
         
-        Password pw = new Password(this.uiwindowmanager.getScreen(), "password", new Vector2f(480, 140));
+        final Password pw = new Password(this.uiwindowmanager.getScreen(), "password", new Vector2f(480, 140));
         window.addChild(pw);
         
         Button button = new Button(this.uiwindowmanager.getScreen(), "button", new Vector2f(100, 180)) {
@@ -84,8 +86,25 @@ public class LoginWindow {
                 //Login
                 LoginWindow.this.server = servertextfield.getText();
                 LoginWindow.this.port = Integer.parseInt(portfield.getText());
-                //
-                window.hideWindow();
+                LoginWindow.this.username = usernametextfield.getText();
+                LoginWindow.this.password = pw.getText();
+                
+                NetworkConnector networkconnector = NetworkConnector.getInstance();
+                
+                if (networkconnector.setUpNetwork(LoginWindow.this.server, LoginWindow.this.port, LoginWindow.this.username, LoginWindow.this.password)) {
+                    window.hideWindow();
+                    window.removeAllChildren();
+                    window.cleanup();
+                    
+                    GameLoader gameloader = new GameLoader(LoginWindow.this.app, networkconnector.getClient());
+                    Thread thread = new Thread(gameloader);
+                    thread.start();
+                } else {
+                    pw.setText("");
+                    Label label = new Label(LoginWindow.this.uiwindowmanager.getScreen(), new Vector2f(480, 200));
+                    label.setText("Wrong Login!");
+                    window.addChild(label);
+                }
             }
 
             @Override

@@ -4,8 +4,11 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
+import com.jme3.input.event.MouseButtonEvent;
+import com.jme3.input.event.MouseMotionEvent;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.network.Client;
 import com.jme3.network.Network;
@@ -16,18 +19,26 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Box;
 import de.gamebasis.clientlistener.ClientListener;
 import de.gamebasis.event.GameStartEvent;
+import de.gamebasis.networkconnector.NetworkConnector;
 import de.gamebasis.pluginsystem.GamePluginManager;
 import de.gamebasis.screen.StartScreen;
 import de.gamebasislib.console.GameConsoleMessage;
 import de.gamebasislib.event.GameEventManager;
 import de.gamebasislib.gameworld.GameWorldHeightMap;
 import de.gamebasislib.player.PlayerPosMessage;
+import de.gamebasislib.ui.UIManager;
+import de.gamebasislib.ui.UIWindowManager;
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.screen.Screen;
 import de.lessvoid.nifty.screen.ScreenController;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import tonegod.gui.controls.buttons.Button;
+import tonegod.gui.controls.text.Label;
+import tonegod.gui.controls.text.Password;
+import tonegod.gui.controls.text.TextField;
+import tonegod.gui.controls.windows.Window;
 
 /**
  * test
@@ -44,6 +55,8 @@ public class Main extends SimpleApplication implements ScreenController {
     
     protected int clientID = 0;
     protected ClientListener clientlistener = new ClientListener();
+    protected UIManager uimanager = null;
+    protected UIWindowManager uiwindowmanager = null;
 
     public static void main(String[] args) {
         Main app = new Main();
@@ -102,6 +115,11 @@ public class Main extends SimpleApplication implements ScreenController {
         setDisplayStatView(false);
         this.setDisplayFps(false);
         
+        this.uimanager = new UIManager(this);
+        this.uiwindowmanager = this.uimanager.getWindowManagerByID(1);
+        
+        NetworkConnector networkconnector = new NetworkConnector(this.client, this.gameclientstatelistener);
+        
         //Startscreen
         StartScreen startScreenState = new StartScreen(this);
         stateManager.attach(startScreenState);
@@ -126,33 +144,8 @@ public class Main extends SimpleApplication implements ScreenController {
         //TODO: add render code
     }
     
-    public void setUpNetwork () {
-        try {
-            this.client = Network.connectToServer(this.server, this.port);
-            this.client.start();
-            
-            //ClientStateListener hinzufügen
-            this.client.addClientStateListener(this.gameclientstatelistener);
-            
-            this.clientlistener = new ClientListener();
-            
-            this.clientID = this.client.getId();
-            
-            //Message Klassen beim Serializer registrieren
-            Serializer.registerClass(GameWorldHeightMap.class);
-            Serializer.registerClass(PlayerPosMessage.class);
-            Serializer.registerClass(GameConsoleMessage.class);
-            
-            this.client.addMessageListener(this.clientlistener, GameWorldHeightMap.class);
-            
-            //Event werfen
-            GameStartEvent gamestartevent = new GameStartEvent(client);
-            GameEventManager.raiseEvent(gamestartevent);
-            
-            GameState.isConnected = true;
-        } catch (IOException ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    public Client getClient () {
+        return this.client;
     }
 
     @Override
@@ -176,7 +169,9 @@ public class Main extends SimpleApplication implements ScreenController {
     
     @Override
     public void destroy() {
-      this.client.close();
-      super.destroy();
+        if (GameState.isConnected) {
+            this.client.close();
+        }
+        super.destroy();
     }
 }

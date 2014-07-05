@@ -10,9 +10,14 @@ import com.jme3.network.Client;
 import com.jme3.network.serializing.Serializer;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture.WrapMode;
+import com.jme3.util.SkyFactory;
 import de.gamebasis.client.GameState;
 import de.gamebasis.permissionsystem.GamePermissionChangedMessage;
 import de.gamebasis.permissionsystem.GamePermissionSystem;
+import de.gamebasislib.gameobject.GameObjectManager;
+import de.gamebasislib.gameworld.GameWorld;
+import de.gamebasislib.gameworldlighting.GameWorldLighting;
+import de.gamebasislib.player.IPlayer;
 
 /**
  *
@@ -31,34 +36,27 @@ public class GameLoader implements Runnable {
     @Override
     public void run () {
         //GameWorld laden
+        GameWorld gameworld = new GameWorld(this.app);
         
         //GamePermissionSystem laden
         GamePermissionSystem gamepermissionsystem = new GamePermissionSystem();
         Serializer.registerClass(GamePermissionChangedMessage.class);
         this.client.addMessageListener(gamepermissionsystem, GamePermissionChangedMessage.class);
 
-        // Create material from Terrain Material Definition
-        Material matRock = new Material(this.app.getAssetManager(), "Common/MatDefs/Terrain/Terrain.j3md");
+        //Player laden
+        IPlayer player = null;
         
-        // Load alpha map (for splat textures)
-        matRock.setTexture("Alpha", this.app.getAssetManager().loadTexture("Textures/Terrain/splat/alphamap.png"));
-        // load heightmap image (for the terrain heightmap)
-        Texture heightMapImage = this.app.getAssetManager().loadTexture("Textures/Terrain/splat/mountains512.png");
-        // load grass texture
-        Texture grass = this.app.getAssetManager().loadTexture("Textures/Terrain/splat/grass.jpg");
-        grass.setWrap(WrapMode.Repeat);
-        matRock.setTexture("Tex1", grass);
-        matRock.setFloat("Tex1Scale", 64f);
-        // load dirt texture
-        Texture dirt = this.app.getAssetManager().loadTexture("Textures/Terrain/splat/dirt.jpg");
-        dirt.setWrap(WrapMode.Repeat);
-        matRock.setTexture("Tex2", dirt);
-        matRock.setFloat("Tex2Scale", 32f);
-        // load rock texture
-        Texture rock = this.app.getAssetManager().loadTexture("Textures/Terrain/splat/road.jpg");
-        rock.setWrap(WrapMode.Repeat);
-        matRock.setTexture("Tex3", rock);
-        matRock.setFloat("Tex3Scale", 128f);
+        //GameWorldLighting laden
+        GameWorldLighting gameworldlighting = new GameWorldLighting(this.app, gameworld, player);
+        GameWorldLighting.setInstance(gameworldlighting);
+        
+        //GameObjectManager laden
+        GameObjectManager gameobjectmanager = new GameObjectManager(this.app);
+        GameObjectManager.setInstance(gameobjectmanager);
+        
+        //Adding Gamesky
+        this.app.getRootNode().attachChild(SkyFactory.createSky(
+            this.app.getAssetManager(), "Textures/Sky/Bright/BrightSky.jpg", false));
         
         GameState.isLoaded = true;
     }

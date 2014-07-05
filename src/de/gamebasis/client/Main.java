@@ -22,9 +22,12 @@ import de.gamebasis.event.GameStartEvent;
 import de.gamebasis.networkconnector.NetworkConnector;
 import de.gamebasis.pluginsystem.GamePluginManager;
 import de.gamebasis.screen.StartScreen;
+import de.gamebasislib.camera.GameCameraManager;
 import de.gamebasislib.console.GameConsoleMessage;
 import de.gamebasislib.event.GameEventManager;
+import de.gamebasislib.gameobject.GameObjectManager;
 import de.gamebasislib.gameworld.GameWorldHeightMap;
+import de.gamebasislib.gameworldlighting.GameWorldLighting;
 import de.gamebasislib.player.PlayerPosMessage;
 import de.gamebasislib.ui.UIManager;
 import de.gamebasislib.ui.UIWindowManager;
@@ -121,14 +124,17 @@ public class Main extends SimpleApplication implements ScreenController {
         NetworkConnector networkconnector = new NetworkConnector(this.client, this.gameclientstatelistener);
         
         //Startscreen
-        StartScreen startScreenState = new StartScreen(this);
-        stateManager.attach(startScreenState);
+        //StartScreen startScreenState = new StartScreen(this);
+        //stateManager.attach(startScreenState);
         // [...] boilerplate init nifty omitted
-        nifty.fromXml("Interface/start.xml", "start", startScreenState); //one of the XML screen elements needs to reference StartScreenState controller class
+        //nifty.fromXml("Interface/start.xml", "start", startScreenState); //one of the XML screen elements needs to reference StartScreenState controller class
         
         //Gameplugins laden
         GamePluginManager.loadGamePlugins("./ext/app");
         GamePluginManager.simpleInitApp(this);
+        
+        GameCameraManager gamecameramanager = new GameCameraManager(this);
+        GameCameraManager.setInstance(gamecameramanager);
         
         GameState.isConnected = false;
         GameState.isLoaded = false;
@@ -138,7 +144,11 @@ public class Main extends SimpleApplication implements ScreenController {
     public void simpleUpdate(float tpf) {
         //TODO: add update code
         if (GameState.isConnected && GameState.isLoaded) {
-            //
+            //GameWorldLighting updaten
+            GameWorldLighting.getInstance().simpleUpdate(tpf);
+            
+            //GameObjects updaten
+            GameObjectManager.getInstance().simpleUpdate(tpf);
         }
     }
 
